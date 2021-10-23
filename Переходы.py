@@ -16,25 +16,23 @@ def alert(ident, state):
 
 def listen(ident):
     url = f"https://api.via-dolorosa.ru/rc/{ident}/status"
-    
+    delta=[]
     while True:
         time.sleep(1)
-        response = requests.get(url)
+        response = requests.get(url) 
     
         try:
             response.raise_for_status()
             
             current = response.json()
             current_phase = current['current_phase_id']
-            
             previuos = current_state_of_controllers[ident]
+
             if (previuos is None) or (previuos['current_phase_id'] != current_phase):
                 cycle_of_rc[ident].append( current_phase )
                 current_state_of_controllers[ident] = current
-                
-                
-                
-                print(f"Контроллер {ident}, состояния: {cycle_of_rc[ident]}")
+                delta.append(time.perf_counter())
+                print(f"Контроллер {ident}, состояния: {cycle_of_rc[ident]}, T = {delta}")
         except requests.HTTPError as http_err:
             print(f'HTTP error occurred: {http_err}')
         except Exception as err:
@@ -44,3 +42,4 @@ def listen(ident):
 for ident in range(lo, hi):
     th = Thread(target=listen, args=(ident,))
     th.start()
+
